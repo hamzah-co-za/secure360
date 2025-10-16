@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Secure 360 — Blueprint Landing (MVP)
+    - Responsive, animated, and production-minded
+    - Highlights: Data Ingestion, Normalization, AI Prioritization, Remediation, RBAC, Visualization, Monitoring
+    - Tech cues: TypeScript, Next.js, Tailwind CSS, Entra ID (RBAC), Power BI
+    - Fonts: Space Grotesk (headlines), Inter (body)
+    - Icons: Fluent UI style (inline SVG)
+    - Notes: Replace TODOs with your actual values (tenant, client ID, API endpoints, Power BI embed).
+  -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Secure 360 — Unified security analytics</title>
+  <meta name="description" content="Secure 360: Azure-native security analytics and response with AI prioritization, RBAC, and Power BI." />
+  <link rel="icon" href="favicon.ico" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS (Play CDN for MVP; swap for local build in Next.js) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind theme config
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'Arial'],
+            display: ['Space Grotesk', 'Inter', 'system-ui'],
+          },
+          colors: {
+            brand: {
+              DEFAULT: '#0A84FF',
+              2: '#6B8AFD',
+              3: '#374AE8'
+            },
+            ok: '#2ECC71',
+            warn: '#F2C94C',
+            err: '#E74C3C',
+            surface: {
+              1: '#0B0E12',
+              2: '#12161D',
+              3: '#0F1319',
+              4: '#1B2230'
+            }
+          },
+          boxShadow: {
+            glow: '0 8px 20px #0a84ff33 inset, 0 6px 18px #0a84ff22',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-4px)' }
+            },
+            pulseGlow: {
+              '0%': { boxShadow: '0 0 0 0 rgba(10,132,255,0.45)' },
+              '70%': { boxShadow: '0 0 0 12px rgba(10,132,255,0)' },
+              '100%': { boxShadow: '0 0 0 0 rgba(10,132,255,0)' },
+            },
+            sheen: {
+              '0%': { backgroundPosition: '200% 0' },
+              '100%': { backgroundPosition: '-200% 0' }
+            }
+          },
+          animation: {
+            float: 'float 5s ease-in-out infinite',
+            pulseGlow: 'pulseGlow 2.4s ease-out infinite',
+            sheen: 'sheen 1.8s linear infinite'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    @media (prefers-color-scheme: light) { :root { color-scheme: light; } }
+
+    /* Smooth entrance */
+    .fade-in {
+      animation: fadeIn 500ms ease 1 both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card hover / focus */
+    .card {
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    }
+    .card:hover, .card:focus-within {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(10, 132, 255, 0.14);
+      border-color: rgba(10, 132, 255, 0.35);
+    }
+
+    /* Accessible motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .card, .fade-in { animation: none; transition: none; }
+    }
+  </style>
+</head>
+<body class="bg-[linear-gradient(180deg,var(--tw-gradient-stops))] from-surface-1 to-surface-2 text-white font-sans">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-surface-2/70 border-b border-surface-4 fade-in">
+    <div class="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-7 h-7 rounded-lg bg-[radial-gradient(120%_120%_at_50%_50%,#0A84FF_0%,#6B8AFD_60%,#374AE8_100%)] shadow-glow animate-pulseGlow" aria-hidden="true"></span>
+        <span class="font-display font-bold tracking-tight">Secure 360</span>
+      </div>
+      <nav class="flex items-center gap-2">
+        <a class="px-3 py-2 rounded-lg border border-surface-4 text-white/90 hover:text-white hover:border-brand/40 card" href="https://github.com/hamzah-co-za/secure360" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <button id="btnSignIn" class="px-3 py-2 rounded-lg border border-brand/40 bg-brand/10 text-white hover:bg-brand/20 card">Sign in</button>
+        <button id="btnSignOut" class="px-3 py-2 rounded-lg border border-surface-4 text-white/90 hover:text-white hover:border-brand/40 card hidden">Sign out</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative fade-in">
+    <div class="absolute inset-x-0 -top-16 h-56 pointer-events-none bg-[radial-gradient(800px_300px_at_20%_0%,rgba(10,132,255,.18),transparent_65%),radial-gradient(900px_360px_at_80%_0%,rgba(107,138,253,.18),transparent_60%)]"></div>
+    <div class="max-w-7xl mx-auto px-5 py-12">
+      <div class="grid lg:grid-cols-2 gap-6 items-start">
+        <div>
+          <h1 class="font-display text-4xl md:text-5xl font-bold tracking-tight">Unified security analytics and response for Microsoft Cloud</h1>
+          <p class="mt-3 text-white/70 max-w-2xl">
+            Orchestrate ingestion from Azure Defender and Microsoft Graph, normalize to Azure SQL, prioritize incidents with AI, and drive remediation via Functions. Visualize posture and alerts in Power BI with Entra ID RBAC.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-4 bg-surface-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand"></span>
+              <span>Azure-native ingest</span>
+            </span>
+            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-4 bg-surface-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand"></span>
+              <span>Power BI + RLS</span>
+            </span>
+            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-surface-4 bg-surface-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand"></span>
+              <span>Teams + ticketing</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Session / Environment panel -->
+        <div class="rounded-2xl border border-surface-4 bg-surface-3 p-4 card">
+          <div class="text-white/60 text-sm">Session</div>
+          <div id="userInfo" class="mt-2 text-white/80">Signed out</div>
+          <hr class="my-4 border-surface-4">
+          <div class="text-white/60 text-sm">Environment</div>
+          <ul class="mt-2 space-y-1 text-white/80">
+            <li>Region: South Africa North (recommended)</li>
+            <li>Data: Azure SQL (private endpoint)</li>
+            <li>Storage: Blob + Queue (landing, archive, orchestration)</li>
+            <li>Functions: Timer + HTTP triggers</li>
+            <li>Auth: Microsoft Entra ID (OIDC)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blueprint grid -->
+  <section class="fade-in">
+    <div class="max-w-7xl mx-auto px-5 py-8 grid lg:grid-cols-3 gap-5">
+      <!-- Data Ingestion -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Fluent-like cloud-arrow icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M12 3a5 5 0 0 0-4.9 3.9A5.5 5.5 0 0 0 6.5 14H8a1 1 0 1 1 0 2H6.5A7.5 7.5 0 1 1 12 3Zm.7 7.3a1 1 0 0 0-1.4 0L9 12.6a1 1 0 1 0 1.4 1.4l.6-.59V18a1 1 0 1 0 2 0v-4.59l.6.59a1 1 0 0 0 1.4-1.4l-2.3-2.3Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Data ingestion</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Ingest security data from Azure Defender and Microsoft Graph using Azure Functions. Store raw JSON in Azure Blob Storage for replay and auditing.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>Timer-triggered Functions (15 min alerts, 6 hr posture)</li>
+          <li>Blob landing zone with lifecycle policies</li>
+          <li>Dead-letter container for failed batches</li>
+        </ul>
+      </article>
+
+      <!-- Data Normalization -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Database icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C7.58 2 4 3.79 4 6v12c0 2.21 3.58 4 8 4s8-1.79 8-4V6c0-2.21-3.58-4-8-4Zm6 6c0 1.1-2.69 2.5-6 2.5S6 9.1 6 8V6c0 1.1 2.69 2.5 6 2.5S18 7.1 18 6v2Zm0 4c0 1.1-2.69 2.5-6 2.5S6 13.1 6 12v-2c0 1.1 2.69 2.5 6 2.5s6-1.4 6-2.5v2Zm0 4c0 1.1-2.69 2.5-6 2.5S6 17.1 6 16v-2c0 1.1 2.69 2.5 6 2.5s6-1.4 6-2.5v2Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Data normalization</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Normalize raw data from Blob into curated tables in Azure SQL. Stabilize downstream analytics and automation with a consistent schema.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>Alerts, Recommendations, Resources, Identities, Incidents</li>
+          <li>Partitioning by date; AAD-only SQL auth</li>
+          <li>Incremental refresh for Power BI</li>
+        </ul>
+      </article>
+
+      <!-- Incident Prioritization (AI) -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Spark icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4Zm7 11 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2ZM4 13l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Incident prioritization</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Analyze alerts and resource configurations using AI to generate a priority score, focusing responders on the highest impact incidents.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>Severity × sensitivity × exploitability score</li>
+          <li>Deduplication into incidents</li>
+          <li>Model orchestration (Gemini via Genkit) — pluggable</li>
+        </ul>
+      </article>
+
+      <!-- Automated Remediation -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Bolt icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M13 2 3 14h7l-1 8 11-14h-7l0-8Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Automated remediation</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          HTTP-triggered Functions post adaptive cards to Teams and integrate with ticketing systems. Track assignments and acknowledgements.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>Teams notifications (adaptive cards)</li>
+          <li>Ticket webhook + back-write ticketId</li>
+          <li>Resource tag updates on confirm</li>
+        </ul>
+      </article>
+
+      <!-- RBAC -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Shield icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M12 2 4 5v6c0 5.25 3.4 8.59 8 11 4.6-2.41 8-5.75 8-11V5l-8-3Zm0 4.2 4.8 2.04V11c0 3.64-2.35 6.25-4.8 7.72C9.55 17.25 7.2 14.64 7.2 11V8.24L12 6.2Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Role-based access control</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Microsoft Entra ID governs authentication and app roles for Viewer, Analyst, and Admin. Align Power BI RLS to app roles.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>App roles → Entra groups → RLS filters</li>
+          <li>Conditional Access + MFA for admins</li>
+          <li>Least privilege; managed identities</li>
+        </ul>
+      </article>
+
+      <!-- Visualization -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <div class="flex items-center gap-3">
+          <!-- Chart icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M4 20h16v-2H4v2Zm3-4h2V8H7v8Zm5 0h2V4h-2v12Zm5 0h2v-6h-2v6Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Data visualization</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Power BI dashboards prioritize critical alerts and key metrics, with drill-down to incident details and RLS for role views.
+        </p>
+        <ul class="mt-3 space-y-1 text-white/80">
+          <li>Secure score trend, MTTR, identity hygiene</li>
+          <li>Incremental refresh & DirectQuery pages</li>
+          <li>Workspace per environment</li>
+        </ul>
+      </article>
+
+      <!-- Alerting & Monitoring -->
+      <article class="rounded-2xl border border-surface-4 bg-surface-3 p-5 lg:col-span-3 card">
+        <div class="flex items-center gap-3">
+          <!-- Bell icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" class="text-brand" fill="currentColor" aria-hidden="true">
+            <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z"/>
+          </svg>
+          <h2 class="font-display text-xl font-semibold">Alerting and monitoring</h2>
+        </div>
+        <p class="mt-2 text-white/70">
+          Azure Monitor alerts for ingestion failures, queue backlogs, Function errors, and secure score drops. Feed alerts into remediation tooling.
+        </p>
+        <div class="grid md:grid-cols-3 gap-4 mt-3">
+          <div class="rounded-xl border border-surface-4 bg-surface-3 p-4">
+            <div class="text-white/60 text-sm">Reliability</div>
+            <div class="mt-2 text-white">Ingestion failures</div>
+            <div class="text-white/70 text-sm">Retry + DLQ pipeline</div>
+          </div>
+          <div class="rounded-xl border border-surface-4 bg-surface-3 p-4">
+            <div class="text-white/60 text-sm">Performance</div>
+            <div class="mt-2 text-white">Queue backlogs</div>
+            <div class="text-white/70 text-sm">Scale-out Functions</div>
+          </div>
+          <div class="rounded-xl border border-surface-4 bg-surface-3 p-4">
+            <div class="text-white/60 text-sm">Security posture</div>
+            <div class="mt-2 text-white">Secure score drops</div>
+            <div class="text-white/70 text-sm">Teams notifications</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Tech stack strip -->
+  <section class="fade-in">
+    <div class="max-w-7xl mx-auto px-5 py-8">
+      <div class="rounded-2xl border border-surface-4 bg-surface-3 p-5">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <h3 class="font-display text-lg font-semibold">AI</h3>
+            <ul class="mt-2 space-y-1 text-white/80">
+              <li>Gemini — multi-modal model</li>
+              <li>Genkit — AI orchestration framework</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-display text-lg font-semibold">UI</h3>
+            <ul class="mt-2 space-y-1 text-white/80">
+              <li>TypeScript — type-safe logic</li>
+              <li>Next.js — SSR/ISR-ready</li>
+              <li>Tailwind CSS — utility-first styles</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-display text-lg font-semibold">Design</h3>
+            <ul class="mt-2 space-y-1 text-white/80">
+              <li>Typography — Space Grotesk (H), Inter (Body)</li>
+              <li>Iconography — Fluent UI-inspired</li>
+              <li>Layout — drill-down dashboards</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Power BI embed + API demo -->
+  <section class="fade-in">
+    <div class="max-w-7xl mx-auto px-5 py-8 grid lg:grid-cols-2 gap-5">
+      <div class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <h3 class="font-display text-lg font-semibold">Security posture dashboard</h3>
+        <p class="mt-1 text-white/70">Embed a Power BI report with RLS for Viewer, Analyst, and Admin roles.</p>
+        <div class="mt-3 rounded-xl border border-surface-4 overflow-hidden">
+          <iframe id="pbiFrame" title="Secure 360 — Power BI" class="w-full h-[420px] bg-surface-2" src="about:blank" loading="lazy"></iframe>
+        </div>
+        <p class="mt-2 text-white/60 text-sm">Set the embed URL in code after configuring Entra auth and Power BI workspace access.</p>
+      </div>
+
+      <div class="rounded-2xl border border-surface-4 bg-surface-3 p-5 card">
+        <h3 class="font-display text-lg font-semibold">Sample API calls</h3>
+        <p class="mt-1 text-white/70">Test Azure Functions endpoints secured with Entra tokens.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button id="btnIncidents" class="px-3 py-2 rounded-lg border border-brand/40 bg-brand/10 hover:bg-brand/20">Fetch incidents</button>
+          <button id="btnResource" class="px-3 py-2 rounded-lg border border-surface-4 hover:border-brand/40">Fetch resource</button>
+        </div>
+        <pre id="apiResult" class="mt-3 p-3 rounded-xl border border-surface-4 bg-surface-2 max-h-64 overflow-auto text-white/80">Sign in to test API calls.</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-surface-4 fade-in">
+    <div class="max-w-7xl mx-auto px-5 py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-white/70">
+      <div>© <span id="year"></span> Secure 360</div>
+      <div class="text-sm">Built for Azure. Zero-trust by design.</div>
+    </div>
+  </footer>
+
+  <!-- Optional MSAL.js for Entra ID sign-in -->
+  <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // TODO: Replace with your tenant and app registration
+    const msalConfig = {
+      auth: {
+        clientId: "YOUR_CLIENT_ID", // TODO
+        authority: "https://login.microsoftonline.com/YOUR_TENANT_ID_OR_DOMAIN", // TODO
+        redirectUri: window.location.origin
+      },
+      cache: { cacheLocation: "sessionStorage", storeAuthStateInCookie: false }
+    };
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    const btnSignIn = document.getElementById('btnSignIn');
+    const btnSignOut = document.getElementById('btnSignOut');
+    const userInfo = document.getElementById('userInfo');
+    const apiResult = document.getElementById('apiResult');
+
+    const API_BASE = "https://YOUR_FUNCTIONS_APP.azurewebsites.net"; // TODO
+    const PBI_EMBED_URL = ""; // TODO e.g. https://app.powerbi.com/reportEmbed?reportId=...&groupId=...
+
+    // Attach Power BI embed URL if provided
+    (function initPbi() {
+      const frame = document.getElementById('pbiFrame');
+      if (PBI_EMBED_URL) frame.src = PBI_EMBED_URL;
+    })();
+
+    function renderAccount(account) {
+      if (!account) {
+        userInfo.textContent = "Signed out";
+        btnSignIn.classList.remove('hidden');
+        btnSignOut.classList.add('hidden');
+        return;
+      }
+      userInfo.innerHTML = `
+        <div><span class="text-white/60">Name:</span> ${account.name || 'Unknown'}</div>
+        <div><span class="text-white/60">Username:</span> ${account.username || 'Unknown'}</div>
+        <div class="text-white/60 text-sm">Tenant: ${msalConfig.auth.authority.replace('https://login.microsoftonline.com/', '')}</div>
+      `;
+      btnSignIn.classList.add('hidden');
+      btnSignOut.classList.remove('hidden');
+    }
+
+    async function signIn() {
+      try {
+        const resp = await msalInstance.loginPopup({ scopes: ['User.Read'] });
+        const account = resp.account || msalInstance.getActiveAccount();
+        msalInstance.setActiveAccount(account);
+        renderAccount(account);
+      } catch (e) {
+        console.error(e);
+        alert('Sign-in failed. Check console for details.');
+      }
+    }
+
+    async function signOut() {
+      try {
+        await msalInstance.logoutPopup();
+      } finally {
+        renderAccount(null);
+        apiResult.textContent = 'Signed out.';
+      }
+    }
+
+    btnSignIn.addEventListener('click', signIn);
+    btnSignOut.addEventListener('click', signOut);
+
+    async function getApiToken() {
+      const account = msalInstance.getActiveAccount();
+      if (!account) throw new Error('Not signed in');
+      const scope = "api://YOUR_API_APP_ID/.default"; // TODO: your Functions app scope
+      const tokenResp = await msalInstance.acquireTokenSilent({ scopes: [scope], account })
+        .catch(() => msalInstance.acquireTokenPopup({ scopes: [scope] }));
+      return tokenResp.accessToken;
+    }
+
+    async function callApi(path, options = {}) {
+      const token = await getApiToken();
+      const res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+      const text = await res.text();
+      return { status: res.status, body: text };
+    }
+
+    document.getElementById('btnIncidents').addEventListener('click', async () => {
+      apiResult.textContent = 'Loading incidents…';
+      try {
+        const { status, body } = await callApi('/api/incidents?status=open&severity=high');
+        apiResult.textContent = `Status: ${status}\n\n${body}`;
+      } catch (e) {
+        apiResult.textContent = `Error: ${e.message}`;
+        console.error(e);
+      }
+    });
+
+    document.getElementById('btnResource').addEventListener('click', async () => {
+      apiResult.textContent = 'Loading resource…';
+      try {
+        const sampleId = 'RESOURCE_ID'; // TODO
+        const { status, body } = await callApi(`/api/resources/${encodeURIComponent(sampleId)}`);
+        apiResult.textContent = `Status: ${status}\n\n${body}`;
+      } catch (e) {
+        apiResult.textContent = `Error: ${e.message}`;
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
